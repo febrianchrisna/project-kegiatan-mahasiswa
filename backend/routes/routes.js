@@ -89,29 +89,13 @@ router.put('/proposals/:id/submit', authenticateToken, submitProposal);
 
 // Download routes - with flexible authentication
 router.get('/proposals/:id/download', (req, res, next) => {
-  // ENHANCED: Better token handling from query parameter
-  const headerToken = req.headers.authorization?.split(' ')[1];
-  const queryToken = req.query.token;
-  const hasToken = headerToken || queryToken;
-  
-  console.log('Download route - Token sources:', {
-    headerToken: !!headerToken,
-    queryToken: !!queryToken,
-    hasToken: !!hasToken,
-    origin: req.headers.origin,
-    userAgent: req.headers['user-agent']?.substring(0, 50)
-  });
+  // Check if token is provided
+  const hasToken = req.headers.authorization || req.query.token;
   
   if (hasToken) {
-    // If token provided in query, move it to header for authenticateToken middleware
-    if (queryToken && !headerToken) {
-      req.headers.authorization = `Bearer ${queryToken}`;
-    }
-    
     // If token provided, authenticate first
     authenticateToken(req, res, (error) => {
       if (error) {
-        console.log('Authentication failed, proceeding as public');
         // If auth fails, still allow download but as public
         req.userId = null;
         req.userRole = 'public';
@@ -120,7 +104,6 @@ router.get('/proposals/:id/download', (req, res, next) => {
     });
   } else {
     // No token, public download
-    console.log('No token provided, proceeding as public');
     req.userId = null;
     req.userRole = 'public';
     downloadProposal(req, res);

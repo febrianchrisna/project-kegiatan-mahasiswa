@@ -512,10 +512,11 @@ export const downloadProposal = async (req, res) => {
         console.log('Proposal ID:', proposalId);
         console.log('User ID:', req.userId);
         console.log('User Role:', req.userRole);
-        console.log('Origin:', req.headers.origin);
-        console.log('Host:', req.headers.host);
+        console.log('User Agent:', req.headers['user-agent']?.substring(0, 50));
         
-        // Set comprehensive CORS headers for Cloud Run
+        // Set comprehensive CORS headers immediately
+        const origin = req.headers.origin || '*';
+        
         res.set({
             'Access-Control-Allow-Origin': '*', // Allow all origins for downloads
             'Access-Control-Allow-Credentials': 'true',
@@ -552,6 +553,10 @@ export const downloadProposal = async (req, res) => {
         }
         
         // Authorization logic - MORE PERMISSIVE for downloads
+        // 1. Admin can download any proposal
+        // 2. Owner can download their own proposal (any status)  
+        // 3. Anyone can download if no authentication (we'll allow for now)
+        
         if (req.userId) {
             // Authenticated user
             if (req.userRole === 'admin') {
@@ -599,7 +604,7 @@ export const downloadProposal = async (req, res) => {
             contentType: downloadResult.metadata?.contentType
         });
         
-        // Set download headers with Cloud Run compatibility
+        // Set download headers with IDM compatibility
         const headers = {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="${sanitizedFilename}"`,
@@ -608,11 +613,10 @@ export const downloadProposal = async (req, res) => {
             'Expires': '0',
             'X-Filename': sanitizedFilename,
             'Accept-Ranges': 'bytes',
-            // Enhanced CORS headers for Cloud Run
+            // CORS headers for download
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Credentials': 'true',
-            'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename',
-            'Cross-Origin-Resource-Policy': 'cross-origin'
+            'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename'
         };
         
         // Add file size if available
@@ -624,7 +628,7 @@ export const downloadProposal = async (req, res) => {
         
         console.log('Headers set, starting stream...');
         
-        // Handle stream events with better error handling for Cloud Run
+        // Handle stream events
         let streamEnded = false;
         let bytesTransferred = 0;
         

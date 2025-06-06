@@ -398,149 +398,56 @@ const ProposalsTab = () => {
       
       console.log('=== STARTING DOWNLOAD ===');
       console.log('Proposal ID:', proposalId);
-      console.log('Environment API URL:', process.env.REACT_APP_API_URL);
       
       const token = localStorage.getItem('accessToken');
       console.log('Token available:', !!token);
       
-      // FIXED: Use the environment variable or default to Cloud Run URL
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://be-project-tcc-663618957788.us-central1.run.app';
-      console.log('Using API Base URL:', API_BASE_URL);
+      // Simple approach: Create a temporary link and click it
+      // This bypasses CORS issues by letting the browser handle the download directly
       
       let downloadUrl = '';
       
       if (token) {
         // Try authenticated download first
-        downloadUrl = `${API_BASE_URL}/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`;
+        downloadUrl = `http://localhost:5000/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`;
         console.log('Using authenticated download URL:', downloadUrl);
       } else {
         // Use public download
-        downloadUrl = `${API_BASE_URL}/public/proposals/${proposalId}/download`;
+        downloadUrl = `http://localhost:5000/public/proposals/${proposalId}/download`;
         console.log('Using public download URL:', downloadUrl);
       }
       
-      // Method 1: Try using fetch with proper headers first
-      try {
-        console.log('Attempting fetch download...');
-        const response = await fetch(downloadUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : undefined,
-            'Accept': 'application/pdf',
-            'Origin': window.location.origin
-          },
-          credentials: 'include',
-          mode: 'cors'
-        });
-        
-        console.log('Fetch response status:', response.status);
-        console.log('Fetch response headers:', Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-          // If fetch fails, try direct link approach
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        // Get filename from headers
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `proposal-${proposalId}.pdf`;
-        if (contentDisposition) {
-          const matches = contentDisposition.match(/filename="([^"]+)"/);
-          if (matches) filename = matches[1];
-        }
-        
-        console.log('Download filename:', filename);
-        
-        // Convert response to blob and download
-        const blob = await response.blob();
-        console.log('Blob size:', blob.size, 'bytes');
-        
-        const url = window.URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up blob URL
-        window.URL.revokeObjectURL(url);
-        
-        console.log('Download completed successfully via fetch');
-        setSuccess('File downloaded successfully.');
-        
-      } catch (fetchError) {
-        console.log('Fetch download failed:', fetchError.message);
-        console.log('Trying direct link approach...');
-        
-        // Method 2: Fallback to direct link approach
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.target = '_blank'; // Open in new tab
-        link.download = `proposal-${proposalId}.pdf`;
-        link.style.display = 'none';
-        
-        // Add event listeners to detect if download started
-        link.addEventListener('click', () => {
-          console.log('Direct link clicked');
-          setSuccess('Download started. If download doesn\'t begin, please check if popup blocker is enabled.');
-        });
-        
-        // Add to DOM, click, and remove
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Also try opening in new window as backup
-        setTimeout(() => {
-          try {
-            const newWindow = window.open(downloadUrl, '_blank');
-            if (!newWindow) {
-              console.log('Popup blocked, showing manual link');
-              setError(
-                <div>
-                  Download blocked by popup blocker. 
-                  <br />
-                  <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="btn btn-link p-0">
-                    Click here to download manually
-                  </a>
-                </div>
-              );
-            } else {
-              console.log('Opened download in new window');
-            }
-          } catch (windowError) {
-            console.log('Window.open failed:', windowError.message);
-          }
-        }, 1000);
-      }
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.target = '_blank'; // Open in new tab to avoid navigation issues
+      link.download = `proposal-${proposalId}.pdf`; // Suggest filename
+      link.style.display = 'none';
+      
+      // Add to DOM, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Download initiated successfully');
+      setSuccess('Download started. Please check your downloads folder.');
       
     } catch (error) {
       console.error('=== DOWNLOAD FAILED ===');
       console.error('Error:', error);
       
-      // Show user-friendly error with manual download option
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://be-project-tcc-663618957788.us-central1.run.app';
-      const token = localStorage.getItem('accessToken');
-      const manualUrl = token 
-        ? `${API_BASE_URL}/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`
-        : `${API_BASE_URL}/public/proposals/${proposalId}/download`;
-      
-      setError(
-        <div>
-          Failed to download file automatically. 
-          <br />
-          <a href={manualUrl} target="_blank" rel="noopener noreferrer" className="btn btn-link p-0">
-            Click here to try manual download
-          </a>
-        </div>
-      );
+      setError('Failed to start download. Please try again or contact support.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (

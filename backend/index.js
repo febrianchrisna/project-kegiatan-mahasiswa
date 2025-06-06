@@ -19,30 +19,14 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:3001',
-      'https://localhost:3000',
-      'https://localhost:3001',
-      'http://34.72.56.19',
-      'https://34.72.56.19',
-      // Add your frontend Cloud Run URL here when deployed
-      /^https:\/\/.*\.run\.app$/,
-      /^https:\/\/.*\.web\.app$/,
-      /^https:\/\/.*\.firebaseapp\.com$/
+      'http://localhost:3001', 
+      'http://34.72.56.19'
     ];
     
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return allowedOrigin === origin;
-      } else if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return false;
-    });
-    
-    if (isAllowed) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all origins for debugging - change in production
+      callback(null, true); // Allow all origins for debugging
     }
   },
   credentials: true,
@@ -71,14 +55,13 @@ app.options('*', (req, res) => {
 
 // Global middleware to set CORS headers on ALL responses
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
+  const origin = req.headers.origin || 'http://localhost:3000';
   
   res.header('Access-Control-Allow-Origin', origin);
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.header('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   
   next();
 });

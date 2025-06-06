@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-// FIXED: Use environment variable or Cloud Run URL by default
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://be-project-tcc-663618957788.us-central1.run.app';
-
-console.log('API Base URL:', API_BASE_URL); // Debug log
+const API_BASE_URL = 'https://be-project-tcc-663618957788.us-central1.run.app'; // Fix: Add http protocol
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -106,15 +103,13 @@ export const proposalsAPI = {
   review: (id, data) => api.put(`/admin/proposals/${id}/review`, data),
   getStats: () => api.get('/admin/proposals/stats'),
   download: (id) => {
-    // FIXED: Always use the same base URL as API
+    // Return the authenticated download URL
     const token = localStorage.getItem('accessToken');
-    console.log('Generated download URL:', `${API_BASE_URL}/proposals/${id}/download?token=${encodeURIComponent(token)}`);
-    return `${API_BASE_URL}/proposals/${id}/download?token=${encodeURIComponent(token)}`;
+    return `http://localhost:5000/proposals/${id}/download?token=${encodeURIComponent(token)}`;
   },
   downloadPublic: (id) => {
-    // FIXED: Always use the same base URL as API
-    console.log('Generated public download URL:', `${API_BASE_URL}/public/proposals/${id}/download`);
-    return `${API_BASE_URL}/public/proposals/${id}/download`;
+    // Return the public download URL (no authentication needed)
+    return `http://localhost:5000/public/proposals/${id}/download`;
   }
 };
 
