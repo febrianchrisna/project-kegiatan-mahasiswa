@@ -89,6 +89,16 @@ router.put('/proposals/:id/submit', authenticateToken, submitProposal);
 
 // Download routes - with flexible authentication
 router.get('/proposals/:id/download', (req, res, next) => {
+  // Set CORS headers immediately
+  const origin = req.headers.origin || 'http://localhost:3000';
+  res.set({
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+    'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename',
+    'Vary': 'Origin'
+  });
+  
   // Check if token is provided
   const hasToken = req.headers.authorization || req.query.token;
   

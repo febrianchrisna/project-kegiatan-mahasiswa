@@ -512,14 +512,13 @@ export const downloadProposal = async (req, res) => {
         console.log('Proposal ID:', proposalId);
         console.log('User ID:', req.userId);
         console.log('User Role:', req.userRole);
-        console.log('User Agent:', req.headers['user-agent']?.substring(0, 50));
+        console.log('Origin:', req.headers.origin);
         
-        // Set comprehensive CORS headers immediately
-        const origin = req.headers.origin || '*';
+        // Set CORS headers for downloads - allow specific origin, not wildcard
+        const origin = req.headers.origin || 'http://localhost:3000';
         
         res.set({
-            'Access-Control-Allow-Origin': '*', // Allow all origins for downloads
-            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Origin': origin, // Use specific origin instead of *
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
             'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename',
@@ -552,11 +551,7 @@ export const downloadProposal = async (req, res) => {
             });
         }
         
-        // Authorization logic - MORE PERMISSIVE for downloads
-        // 1. Admin can download any proposal
-        // 2. Owner can download their own proposal (any status)  
-        // 3. Anyone can download if no authentication (we'll allow for now)
-        
+        // More permissive authorization for downloads
         if (req.userId) {
             // Authenticated user
             if (req.userRole === 'admin') {
@@ -564,11 +559,14 @@ export const downloadProposal = async (req, res) => {
             } else if (result.data.user_id === req.userId) {
                 console.log('Owner access granted');
             } else {
-                console.log('Access denied - not owner or admin, but allowing anyway for download');
-                // CHANGED: Allow download even if not owner (more permissive)
+                console.log('Access denied - not owner or admin');
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Not authorized to download this proposal'
+                });
             }
         } else {
-            // Public access - allow all for now to test download functionality
+            // Allow public download for now (you can restrict this later)
             console.log('Public access granted');
         }
         
@@ -604,7 +602,7 @@ export const downloadProposal = async (req, res) => {
             contentType: downloadResult.metadata?.contentType
         });
         
-        // Set download headers with IDM compatibility
+        // Set download headers
         const headers = {
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename="${sanitizedFilename}"`,
@@ -613,9 +611,8 @@ export const downloadProposal = async (req, res) => {
             'Expires': '0',
             'X-Filename': sanitizedFilename,
             'Accept-Ranges': 'bytes',
-            // CORS headers for download
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': 'true',
+            // CORS headers for the actual response
+            'Access-Control-Allow-Origin': origin,
             'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename'
         };
         
@@ -689,9 +686,10 @@ export const downloadProposal = async (req, res) => {
         console.error('Download controller error:', error);
         
         if (!res.headersSent) {
+            const origin = req.headers.origin || 'http://localhost:3000';
             res.set({
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': 'true'
+                'Access-Control-Allow-Origin': origin,
+                'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length, Content-Type, Cache-Control, X-Filename'
             });
             
             res.status(500).json({

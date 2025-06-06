@@ -111,13 +111,32 @@ export const proposalsAPI = {
     // Return the public download URL using the deployed backend
     return `${API_BASE_URL}/public/proposals/${id}/download`;
   },
-  // Add new method for downloading files through API call
+  // Add new method for downloading files through API call WITHOUT credentials
   downloadFile: async (id) => {
     try {
-      const response = await api.get(`/proposals/${id}/download`, {
-        responseType: 'blob',
-        timeout: 120000 // 2 minutes timeout for large files
+      // Create a new axios instance WITHOUT credentials for downloads
+      const downloadApi = axios.create({
+        baseURL: API_BASE_URL,
+        timeout: 120000,
+        withCredentials: false // This is the key change
       });
+      
+      // Add token to headers instead of using withCredentials
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Accept': 'application/pdf'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await downloadApi.get(`/proposals/${id}/download`, {
+        responseType: 'blob',
+        headers: headers,
+        timeout: 120000
+      });
+      
       return response;
     } catch (error) {
       throw error;

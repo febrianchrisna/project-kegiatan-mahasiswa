@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Form, Button, Table, Alert, Badge, Nav, Tab, Row, Col, Spinner } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
+import proposalsAPI from '../../services/proposalsAPI';
 
 const ProposalsTab = () => {
   const { isAdmin } = useAuth();
@@ -395,11 +396,8 @@ const ProposalsTab = () => {
     try {
       setLoading(true);
       
-      // Use the API service method for downloading
-      const response = await api.get(`/proposals/${proposalId}/download`, {
-        responseType: 'blob',
-        timeout: 120000 // 2 minutes timeout
-      });
+      // Use the new downloadFile method from proposalsAPI
+      const response = await proposalsAPI.downloadFile(proposalId);
       
       // Create blob URL and trigger download
       const blob = new Blob([response.data], { type: 'application/pdf' });
