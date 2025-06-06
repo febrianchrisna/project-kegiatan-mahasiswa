@@ -394,49 +394,43 @@ const ProposalsTab = () => {
   const downloadProposalFile = async (proposalId) => {
     try {
       setLoading(true);
-      setError('');
       
-      console.log('=== STARTING DOWNLOAD ===');
-      console.log('Proposal ID:', proposalId);
+      // Use the API service method for downloading
+      const response = await api.get(`/proposals/${proposalId}/download`, {
+        responseType: 'blob',
+        timeout: 120000 // 2 minutes timeout
+      });
       
-      const token = localStorage.getItem('accessToken');
-      console.log('Token available:', !!token);
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
       
-      // Simple approach: Create a temporary link and click it
-      // This bypasses CORS issues by letting the browser handle the download directly
+      // Get filename from response headers or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `proposal-${proposalId}.pdf`;
       
-      let downloadUrl = '';
-      
-      if (token) {
-        // Try authenticated download first
-        downloadUrl = `http://localhost:5000/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`;
-        console.log('Using authenticated download URL:', downloadUrl);
-      } else {
-        // Use public download
-        downloadUrl = `http://localhost:5000/public/proposals/${proposalId}/download`;
-        console.log('Using public download URL:', downloadUrl);
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
       }
       
-      // Create a temporary link element
+      // Create download link and trigger download
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.target = '_blank'; // Open in new tab to avoid navigation issues
-      link.download = `proposal-${proposalId}.pdf`; // Suggest filename
-      link.style.display = 'none';
-      
-      // Add to DOM, click, and remove
+      link.href = url;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
+      
+      // Cleanup
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
-      console.log('Download initiated successfully');
-      setSuccess('Download started. Please check your downloads folder.');
-      
+      setSuccess('File downloaded successfully');
     } catch (error) {
-      console.error('=== DOWNLOAD FAILED ===');
-      console.error('Error:', error);
-      
-      setError('Failed to start download. Please try again or contact support.');
+      console.error('Download error:', error);
+      setError(error.response?.data?.message || 'Failed to download file');
     } finally {
       setLoading(false);
     }

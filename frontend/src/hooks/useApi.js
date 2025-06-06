@@ -327,9 +327,36 @@ export const useApi = () => {
       setLoading(true);
       setError(null);
       
-      // For GCS, use the downloadFile method from proposalsAPI
+      // Use the downloadFile method from proposalsAPI for proper API call
       const response = await proposalsAPI.downloadFile(id);
-      return { success: true, data: response };
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Get filename from response headers or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `proposal-${id}.pdf`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create download link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true, data: 'File downloaded successfully' };
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to download proposal file';
       setError(errorMessage);

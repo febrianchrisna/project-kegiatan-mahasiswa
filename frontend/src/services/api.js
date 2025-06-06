@@ -103,13 +103,25 @@ export const proposalsAPI = {
   review: (id, data) => api.put(`/admin/proposals/${id}/review`, data),
   getStats: () => api.get('/admin/proposals/stats'),
   download: (id) => {
-    // Return the authenticated download URL
+    // Return the authenticated download URL using the deployed backend
     const token = localStorage.getItem('accessToken');
-    return `http://localhost:5000/proposals/${id}/download?token=${encodeURIComponent(token)}`;
+    return `${API_BASE_URL}/proposals/${id}/download?token=${encodeURIComponent(token)}`;
   },
   downloadPublic: (id) => {
-    // Return the public download URL (no authentication needed)
-    return `http://localhost:5000/public/proposals/${id}/download`;
+    // Return the public download URL using the deployed backend
+    return `${API_BASE_URL}/public/proposals/${id}/download`;
+  },
+  // Add new method for downloading files through API call
+  downloadFile: async (id) => {
+    try {
+      const response = await api.get(`/proposals/${id}/download`, {
+        responseType: 'blob',
+        timeout: 120000 // 2 minutes timeout for large files
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

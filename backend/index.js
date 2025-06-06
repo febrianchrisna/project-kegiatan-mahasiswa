@@ -20,13 +20,30 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001', 
-      'http://34.72.56.19'
+      'http://34.72.56.19',
+      'https://localhost:3000', // HTTPS localhost
+      'https://localhost:3001',
+      // Add your frontend domain if deployed
+      /^https?:\/\/.*\.vercel\.app$/, // Vercel deployments
+      /^https?:\/\/.*\.netlify\.app$/, // Netlify deployments
+      /^https?:\/\/.*\.herokuapp\.com$/, // Heroku deployments
     ];
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin matches any allowed origin (including regex patterns)
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all origins for debugging
+      console.log(`CORS: Origin ${origin} not allowed`);
+      callback(null, true); // Still allow for debugging, but log it
     }
   },
   credentials: true,
@@ -41,9 +58,16 @@ app.use(cors(corsOptions));
 
 // Handle ALL preflight requests
 app.options('*', (req, res) => {
-  const origin = req.headers.origin || 'http://localhost:3000';
+  const origin = req.headers.origin;
+  console.log(`OPTIONS request from origin: ${origin}`);
   
-  res.header('Access-Control-Allow-Origin', origin);
+  // Set specific origin instead of wildcard when credentials are involved
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
@@ -55,9 +79,15 @@ app.options('*', (req, res) => {
 
 // Global middleware to set CORS headers on ALL responses
 app.use((req, res, next) => {
-  const origin = req.headers.origin || 'http://localhost:3000';
+  const origin = req.headers.origin;
   
-  res.header('Access-Control-Allow-Origin', origin);
+  // Set specific origin instead of wildcard when credentials are involved
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
