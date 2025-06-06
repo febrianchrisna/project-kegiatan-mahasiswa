@@ -103,13 +103,13 @@ export const proposalsAPI = {
   review: (id, data) => api.put(`/admin/proposals/${id}/review`, data),
   getStats: () => api.get('/admin/proposals/stats'),
   download: (id) => {
-    // Return the authenticated download URL
+    // FIXED: Use the same base URL as the API
     const token = localStorage.getItem('accessToken');
-    return `http://localhost:5000/proposals/${id}/download?token=${encodeURIComponent(token)}`;
+    return `${API_BASE_URL}/proposals/${id}/download?token=${encodeURIComponent(token)}`;
   },
   downloadPublic: (id) => {
-    // Return the public download URL (no authentication needed)
-    return `http://localhost:5000/public/proposals/${id}/download`;
+    // FIXED: Use the same base URL as the API
+    return `${API_BASE_URL}/public/proposals/${id}/download`;
   }
 };
 

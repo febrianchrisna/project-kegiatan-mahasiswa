@@ -402,41 +402,89 @@ const ProposalsTab = () => {
       const token = localStorage.getItem('accessToken');
       console.log('Token available:', !!token);
       
-      // Simple approach: Create a temporary link and click it
-      // This bypasses CORS issues by letting the browser handle the download directly
+      // Get the current API base URL from environment or use the deployed URL
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://be-project-tcc-663618957788.us-central1.run.app';
       
       let downloadUrl = '';
       
       if (token) {
         // Try authenticated download first
-        downloadUrl = `http://localhost:5000/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`;
+        downloadUrl = `${API_BASE_URL}/proposals/${proposalId}/download?token=${encodeURIComponent(token)}`;
         console.log('Using authenticated download URL:', downloadUrl);
       } else {
         // Use public download
-        downloadUrl = `http://localhost:5000/public/proposals/${proposalId}/download`;
+        downloadUrl = `${API_BASE_URL}/public/proposals/${proposalId}/download`;
         console.log('Using public download URL:', downloadUrl);
       }
       
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.target = '_blank'; // Open in new tab to avoid navigation issues
-      link.download = `proposal-${proposalId}.pdf`; // Suggest filename
-      link.style.display = 'none';
-      
-      // Add to DOM, click, and remove
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      console.log('Download initiated successfully');
-      setSuccess('Download started. Please check your downloads folder.');
+      // For Cloud Run, we need to handle CORS properly
+      // Try using fetch with proper headers first
+      try {
+        console.log('Attempting fetch download...');
+        const response = await fetch(downloadUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : undefined,
+            'Accept': 'application/pdf'
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Get filename from headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `proposal-${proposalId}.pdf`;
+        if (contentDisposition) {
+          const matches = contentDisposition.match(/filename="([^"]+)"/);
+          if (matches) filename = matches[1];
+        }
+        
+        // Convert response to blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up blob URL
+        window.URL.revokeObjectURL(url);
+        
+        console.log('Download completed successfully via fetch');
+        setSuccess('File downloaded successfully.');
+        
+      } catch (fetchError) {
+        console.log('Fetch download failed, trying direct link approach:', fetchError.message);
+        
+        // Fallback: Create a temporary link and click it
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.target = '_blank'; // Open in new tab to avoid navigation issues
+        link.download = `proposal-${proposalId}.pdf`; // Suggest filename
+        link.style.display = 'none';
+        
+        // Add to DOM, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('Download initiated via direct link');
+        setSuccess('Download started. Please check your downloads folder.');
+      }
       
     } catch (error) {
       console.error('=== DOWNLOAD FAILED ===');
       console.error('Error:', error);
       
-      setError('Failed to start download. Please try again or contact support.');
+      setError('Failed to download file. Please try again or contact support.');
     } finally {
       setLoading(false);
     }
