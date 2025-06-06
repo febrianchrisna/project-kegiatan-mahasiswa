@@ -1,8 +1,8 @@
-### Health Check
-GET http://localhost:5000/health
+### Health Check - Cloud Run
+GET https://be-project-tcc-663618957788.us-central1.run.app/health
 
-### IMPORTANT: Before running these requests, make sure to set up your .env file with database configurations
-# Create a .env file in the backend directory with the required database variables
+### Health Check - Local (for development)
+GET http://localhost:5000/health
 
 ### ==================== AUTHENTICATION ====================
 
@@ -29,6 +29,15 @@ Content-Type: application/json
     "username": "Admin User",
     "password": "admin123",
     "phone": "+62887654321"
+}
+
+### Login Student - Cloud Run
+POST https://be-project-tcc-663618957788.us-central1.run.app/auth/login
+Content-Type: application/json
+
+{
+    "email": "febriankrisna77@gmail.com",
+    "password": "password123"
 }
 
 ### Login Student
@@ -356,5 +365,26 @@ GET http://localhost:5000/debug/activities/count
 
 ### Test database connection
 GET http://localhost:5000/health
+
+### ==================== DOWNLOAD TESTING ====================
+
+### Download Proposal PDF (Cloud Run with token in header)
+GET https://be-project-tcc-663618957788.us-central1.run.app/proposals/3/download
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Download Proposal PDF (Cloud Run with token in query)
+GET https://be-project-tcc-663618957788.us-central1.run.app/proposals/3/download?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiZW1haWwiOiJmZWJyaWFua3Jpc25hNzdAZ21haWwuY29tIiwidXNlcm5hbWUiOiJmZWJyaWFuIiwicm9sZSI6InVzZXIiLCJzdHVkZW50X2lkIjoiMTIzMjIwMDk5IiwiZmFjdWx0eSI6IkZhY3VsdHkgb2YgQ29tcHV0ZXIgU2NpZW5jZSIsIm1ham9yIjoiSW5mb3JtYXRpb24gVGVjaG5vbG9neSIsInBob25lIjoiMDkzMjEwOTMyMTMyIiwiY3JlYXRlZEF0IjoiMjAyNS0wNi0wNlQwODowMTowNy4wMDBaIiwidXBkYXRlZEF0IjoiMjAyNS0wNi0wNlQwODozMDowMy4wMDBaIiwiaWF0IjoxNzQ5MTk5MTU3LCJleHAiOjE3NDkyMDA5NTd9.VGrfUNQkqqdUIJpA8krvl5wFHo4-cVpOImZfMnB5ALE
+
+### Public Download (Cloud Run)
+GET https://be-project-tcc-663618957788.us-central1.run.app/public/proposals/3/download
+
+### ==================== DEBUG ENDPOINTS ====================
+
+### Check proposals count (Cloud Run)
+GET https://be-project-tcc-663618957788.us-central1.run.app/debug/proposals/count
+
+### Get All Proposals (Cloud Run)
+GET https://be-project-tcc-663618957788.us-central1.run.app/proposals
+Authorization: Bearer YOUR_TOKEN_HERE
 
 
