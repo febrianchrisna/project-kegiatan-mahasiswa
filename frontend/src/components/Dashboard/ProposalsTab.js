@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Form, Button, Table, Alert, Badge, Nav, Tab, Row, Col, Spinner } from 'react-bootstrap';
 import { useAuth } from '../../contexts/AuthContext';
-import api from '../../services/api';
-import proposalsAPI from '../../services/proposalsAPI';
+import api, { proposalsAPI } from '../../services/api';
 
 const ProposalsTab = () => {
   const { isAdmin } = useAuth();
