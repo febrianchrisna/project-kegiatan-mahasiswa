@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000'; // Fix: Add http protocol
+const API_BASE_URL = 'https://be-project-tcc-663618957788.us-central1.run.app'; // Fix: Add http protocol
 
 const api = axios.create({
   baseURL: API_BASE_URL,
