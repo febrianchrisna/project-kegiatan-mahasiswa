@@ -47,38 +47,16 @@ const storage = new Storage({
 const bucket = storage.bucket(bucketName);
 
 // Test bucket access on initialization
-if (process.env.NODE_ENV === 'production') {
-  // In production (Cloud Run), test bucket access with timeout
-  Promise.race([
-    bucket.exists(),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 10000)
-    )
-  ])
-    .then(([exists]) => {
-      if (exists) {
-        console.log(`✅ Successfully connected to GCS bucket: ${bucketName}`);
-      } else {
-        console.warn(`⚠️ Bucket ${bucketName} does not exist or no access`);
-      }
-    })
-    .catch((error) => {
-      console.error('❌ Failed to connect to GCS bucket:', error.message);
-      console.warn('⚠️ Continuing without GCS verification...');
-    });
-} else {
-  // In development, test normally
-  bucket.exists()
-    .then(([exists]) => {
-      if (exists) {
-        console.log(`✅ Successfully connected to GCS bucket: ${bucketName}`);
-      } else {
-        console.warn(`⚠️ Bucket ${bucketName} does not exist or no access`);
-      }
-    })
-    .catch((error) => {
-      console.error('❌ Failed to connect to GCS bucket:', error.message);
-    });
-}
+bucket.exists()
+  .then(([exists]) => {
+    if (exists) {
+      console.log(`✅ Successfully connected to GCS bucket: ${bucketName}`);
+    } else {
+      console.warn(`⚠️ Bucket ${bucketName} does not exist or no access`);
+    }
+  })
+  .catch((error) => {
+    console.error('❌ Failed to connect to GCS bucket:', error.message);
+  });
 
 export { bucket };

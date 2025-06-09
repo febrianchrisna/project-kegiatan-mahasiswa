@@ -146,7 +146,6 @@ const initializeDatabases = async () => {
     console.log('Initializing databases...');
     console.log('Environment check:');
     console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
-    console.log('- PORT:', process.env.PORT || '5000');
     console.log('- MySQL DB:', process.env.MYSQL_DB_NAME || 'NOT SET');
     console.log('- PostgreSQL DB:', process.env.POSTGRES_DB_NAME || 'NOT SET');
     console.log('- Google Cloud Storage Project:', process.env.GOOGLE_CLOUD_PROJECT_ID ? 'CONFIGURED' : 'NOT SET');
@@ -157,30 +156,11 @@ const initializeDatabases = async () => {
       console.warn('⚠️ Google Cloud Storage credentials not fully configured. File upload/download may not work.');
     }
     
-    // For Cloud Run, we might need to handle database connections more gracefully
-    try {
-      // Sync MySQL database (for users, authentication & student activities)
-      await syncMySQLDatabase();
-      console.log('✅ MySQL database synced successfully');
-    } catch (error) {
-      console.error('❌ MySQL sync failed:', error.message);
-      // Don't exit in production, let the service start without database
-      if (process.env.NODE_ENV !== 'production') {
-        throw error;
-      }
-    }
+    // Sync MySQL database (for users, authentication & student activities)
+    await syncMySQLDatabase();
     
-    try {
-      // Sync PostgreSQL database (for student proposals)
-      await syncPostgresDatabase();
-      console.log('✅ PostgreSQL database synced successfully');
-    } catch (error) {
-      console.error('❌ PostgreSQL sync failed:', error.message);
-      // Don't exit in production, let the service start without database
-      if (process.env.NODE_ENV !== 'production') {
-        throw error;
-      }
-    }
+    // Sync PostgreSQL database (for student proposals)
+    await syncPostgresDatabase();
     
     console.log('All databases initialized successfully!');
     
@@ -195,65 +175,21 @@ const initializeDatabases = async () => {
     
   } catch (error) {
     console.error('Database initialization failed:', error.message);
-    
-    // In production (Cloud Run), don't exit on database errors
-    if (process.env.NODE_ENV === 'production') {
-      console.warn('⚠️ Starting server without database connection. Some features may not work.');
-    } else {
-      console.error('Please check your database credentials and ensure the databases are running.');
-      process.exit(1);
-    }
-  }
-};
-
-// Enhanced startup function for Cloud Run
-const startServer = async () => {
-  try {
-    // Initialize databases
-    await initializeDatabases();
-    
-    // Start server - IMPORTANT: Use PORT environment variable for Cloud Run
-    const PORT = process.env.PORT || 5000;
-    const HOST = process.env.HOST || '0.0.0.0'; // Important for Cloud Run
-    
-    const server = app.listen(PORT, HOST, () => {
-      console.log(`✅ Student Activity Management System running on ${HOST}:${PORT}`);
-      console.log('📡 Server is ready to accept connections');
-      console.log('Available endpoints:');
-      console.log('- Health Check: /health');
-      console.log('- Authentication: /auth/*');
-      console.log('- Student Activities (MySQL): /activities');
-      console.log('- Student Proposals (PostgreSQL): /proposals');
-      console.log('- Admin Panel: /admin/*');
-      console.log('- File Storage: Google Cloud Storage');
-    });
-    
-    // Handle graceful shutdown
-    const gracefulShutdown = (signal) => {
-      console.log(`Received ${signal}. Starting graceful shutdown...`);
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    };
-    
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-    
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      // Don't exit in production
-      if (process.env.NODE_ENV !== 'production') {
-        process.exit(1);
-      }
-    });
-    
-  } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Please check your database credentials and ensure the databases are running.');
     process.exit(1);
   }
 };
 
-// Start the server
-startServer();
+initializeDatabases().then(() => {
+  // Start server
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Student Activity Management System running on port ${PORT}`);
+    console.log('Available endpoints:');
+    console.log('- Authentication: /auth/*');
+    console.log('- Student Activities (MySQL): /activities');
+    console.log('- Student Proposals (PostgreSQL): /proposals');
+    console.log('- Admin Panel: /admin/*');
+    console.log('- File Storage: Google Cloud Storage');
+  });
+});
