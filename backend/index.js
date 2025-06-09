@@ -21,8 +21,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001', 
       'http://34.30.86.149',
-      'https://frontend-kegiatanmhs-dot-g-09-450802.uc.r.appspot.com',
-      // Add your frontend domain if deployed
+      'https://frontend-kegiatanmhs-dot-g-09-450802.uc.r.appspot.com', 
       /^https?:\/\/.*\.vercel\.app$/, // Vercel deployments
       /^https?:\/\/.*\.netlify\.app$/, // Netlify deployments
       /^https?:\/\/.*\.herokuapp\.com$/, // Heroku deployments
