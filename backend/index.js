@@ -6,6 +6,7 @@ import routes from './routes/routes.js';
 import { syncMySQLDatabase } from './config/mysqlDatabase.js';
 import { syncPostgresDatabase } from './config/postgresDatabase.js';
 import './models/associations.js';  // Import associations to ensure they're set up
+
 dotenv.config();
 
 const app = express();
@@ -21,8 +22,6 @@ const corsOptions = {
       'http://localhost:3001', 
       'http://34.30.86.149',
       'https://frontend-kegiatanmhs-dot-g-09-450802.uc.r.appspot.com',
-      'https://localhost:3000', // HTTPS localhost
-      'https://localhost:3001',
       // Add your frontend domain if deployed
       /^https?:\/\/.*\.vercel\.app$/, // Vercel deployments
       /^https?:\/\/.*\.netlify\.app$/, // Netlify deployments
