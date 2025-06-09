@@ -19,8 +19,8 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:3001', 
       'http://34.30.86.149',
+      'http://localhost:3001', 
       'https://frontend-kegiatanmhs-dot-g-09-450802.uc.r.appspot.com', 
       /^https?:\/\/.*\.vercel\.app$/, // Vercel deployments
       /^https?:\/\/.*\.netlify\.app$/, // Netlify deployments
