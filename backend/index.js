@@ -20,7 +20,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001', 
-      'http://34.72.56.19',
+      'http://34.30.86.149',
       'https://frontend-kegiatanmhs-dot-g-09-450802.uc.r.appspot.com',
       'https://localhost:3000', // HTTPS localhost
       'https://localhost:3001',
