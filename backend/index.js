@@ -6,7 +6,6 @@ import routes from './routes/routes.js';
 import { syncMySQLDatabase } from './config/mysqlDatabase.js';
 import { syncPostgresDatabase } from './config/postgresDatabase.js';
 import './models/associations.js';  // Import associations to ensure they're set up
-
 dotenv.config();
 
 const app = express();
