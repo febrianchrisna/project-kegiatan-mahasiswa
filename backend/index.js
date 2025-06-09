@@ -14,7 +14,7 @@ const app = express();
 // Configure CORS for credentials
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
